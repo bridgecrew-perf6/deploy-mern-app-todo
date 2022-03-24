@@ -1,13 +1,14 @@
 const express = require('express');
 const mongoose = require('mongoose');
+require("dotenv").config({ path: "./config.env" });
 const cors = require('cors');
-
 const app = express();
-
+const path = require('path');
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect("mongodb://127.0.0.1:27017/mern-todo",{
+
+mongoose.connect(process.env.MONGO_URI,{
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => console.log("Connected to DB")).catch(console.error);
@@ -51,5 +52,24 @@ app.get('/todo/complete/:id', async(req, res) =>{
 
 })
 
+if(process.env.NODE_ENV === 'production'){
 
-app.listen(3001, () => console.log("Server started on port 3001"));
+    app.use(express.static(path.join(__dirname, '/client/build')));
+
+
+    app.get('*', (req, res) =>{
+
+        res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+    })
+
+} else {
+
+    app.get('/', (req, res) => {
+        res.send("Api running");
+    })
+
+}
+
+const PORT = process.env.PORT;
+
+app.listen(PORT, () => console.log("Server started on port "+ PORT));
